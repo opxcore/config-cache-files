@@ -1,0 +1,31 @@
+{
+  "name": "opxcore/config-cache-file",
+  "description": "The OpxCore config cache file driver.",
+  "keywords": [
+    "opxcore"
+  ],
+  "license": "MIT",
+  "type": "library",
+  "require": {
+    "php": "^7.1.3",
+    "opxcore/interfaces": "0.1.x-dev"
+  },
+  "require-dev": {
+  },
+  "autoload": {
+    "files": [
+    ],
+    "psr-4": {
+      "OpxCore\\Config\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "0.1-dev"
+    }
+  }
+}
