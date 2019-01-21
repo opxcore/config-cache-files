@@ -76,7 +76,8 @@ class ConfigCacheFile implements ConfigCacheRepositoryInterface
      */
     public function save($config, $id = 'default'): bool
     {
-        if (!$this->path || (!is_dir($this->path) && !mkdir($this->path, 0644, true))) {
+        // fix for mkdir race condition
+        if (!$this->path || (!is_dir($this->path) && !mkdir($this->path, 0644, true) && !is_dir($this->path))) {
             return false;
         }
 
