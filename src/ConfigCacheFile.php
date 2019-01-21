@@ -61,7 +61,13 @@ class ConfigCacheFile implements ConfigCacheRepositoryInterface
             return false;
         }
 
-        $config = unserialize(file_get_contents($filename), ['allowed_classes' => false]);
+        $content = file_get_contents($filename);
+
+        if($content === false) {
+            return false;
+        }
+
+        $config = unserialize($content, ['allowed_classes' => false]);
 
         return true;
     }
