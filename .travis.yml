@@ -8,6 +8,11 @@ matrix:
     - php: 7.2
       env: ANALYZE=true
     - php: 7.3
+
+env:
+  global:
+    - TMPDIR=/tmp
+
 install:
   - travis_retry composer self-update
   - travis_retry composer update --no-interaction --dev

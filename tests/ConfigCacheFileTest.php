@@ -78,7 +78,7 @@ class ConfigCacheFileTest extends TestCase
         $this->assertTrue($saved);
         unlink($path . DIRECTORY_SEPARATOR . 'config.cache');
         rmdir($path);
-        rmdir($this->path . DIRECTORY_SEPARATOR . 'test');
+        rmdir($this->temp . DIRECTORY_SEPARATOR . 'test');
     }
 
     public function test_Load(): void
