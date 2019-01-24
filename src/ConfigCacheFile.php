@@ -18,44 +18,40 @@ class ConfigCacheFile implements ConfigCacheRepositoryInterface
      *
      * @var  string
      */
-    protected $prefix;
+    protected $prefix = 'config';
 
     /**
      * Extension for cache file.
      *
      * @var  string
      */
-    protected $extension;
+    protected $extension = 'cache';
 
     /**
      * ConfigCacheFile constructor.
      *
      * @param  string|null $path
-     * @param  string|null $prefix
-     * @param  string|null $extension
      */
-    public function __construct($path = null, $prefix = 'config.', $extension = '.cache')
+    public function __construct($path = null)
     {
         $this->path = $path;
-        $this->prefix = $prefix;
-        $this->extension = $extension;
     }
 
     /**
      * Load config from cache.
      *
-     * @param  string $id
      * @param  array $config
-     *
+     * @param  string|null $profile
+
      * @return  bool
      */
-    public function load(&$config, $id = 'default'): bool
+    public function load(&$config, $profile = null): bool
     {
         if (!$this->path) {
             return false;
         }
 
-        $filename = $this->makeFilename($id);
+        $filename = $this->makeFilename($profile);
 
         if (!file_exists($filename)) {
             return false;
@@ -63,47 +59,49 @@ class ConfigCacheFile implements ConfigCacheRepositoryInterface
 
         $content = file_get_contents($filename);
 
-        if($content === false) {
-            return false;
+        if($content !== false) {
+            $config = unserialize($content, ['allowed_classes' => false]);
         }
 
-        $config = unserialize($content, ['allowed_classes' => false]);
-
-        return true;
+        return $content !== false;
     }
 
     /**
      * Save config to cache.
      *
-     * @param  string $id
      * @param  array $config
+     * @param  string|null $profile
      *
      * @return  bool
      */
-    public function save($config, $id = 'default'): bool
+    public function save($config, $profile = null): bool
     {
-        // fix for mkdir race condition
-        if (!$this->path || (!is_dir($this->path) && !mkdir($this->path, 0644, true) && !is_dir($this->path))) {
-            return false;
+        $dirIsSet = $this->path !== null;
+
+        if ($dirIsSet && !is_dir($this->path)) {
+            // fix for mkdir race condition
+            $dirIsSet = !is_dir($this->path) && mkdir($this->path, 0644, true) && is_dir($this->path);
         }
 
-        $filename = $this->makeFilename($id);
+        if($dirIsSet) {
+            $filename = $this->makeFilename($profile);
+            $saved = file_put_contents($filename, serialize($config)) !== false;
+        }
 
-        return file_put_contents($filename, serialize($config)) !== false;
+        return  $dirIsSet && isset($saved);
     }
 
     /**
      * Make filename for given id.
      *
-     * @param  string $id
+     * @param  string $profile
      *
      * @return  string
      */
-    protected function makeFilename($id): string
+    protected function makeFilename($profile): string
     {
-        $prefix = $this->prefix ? $this->prefix . '.' : null;
-        $extension = $this->extension ? $this->extension . '.' : null;
+        $filename = trim(trim($this->prefix . '.' . $profile, '.') . '.' . $this->extension, '.');
 
-        return $this->path . DIRECTORY_SEPARATOR . $prefix . $id . $extension;
+        return $this->path . DIRECTORY_SEPARATOR . $filename;
     }
 }
