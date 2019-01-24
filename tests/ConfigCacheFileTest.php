@@ -5,10 +5,12 @@ use PHPUnit\Framework\TestCase;
 class ConfigCacheFileTest extends TestCase
 {
     protected $path;
+    protected $temp;
 
     public function setUp()
     {
         $this->path = __DIR__ . DIRECTORY_SEPARATOR . 'cache';
+        $this->temp = sys_get_temp_dir();
     }
 
     public function test_Wrong_Path(): void
@@ -30,9 +32,9 @@ class ConfigCacheFileTest extends TestCase
         $this->assertEquals([], $config);
     }
 
-    public function test_FileNotExists(): void
+    public function test_File_Not_Exists(): void
     {
-        $conf = new \OpxCore\Config\ConfigCacheFile($this->path);
+        $conf = new \OpxCore\Config\ConfigCacheFile(__DIR__);
         $config = [];
         $loaded = $conf->load($config, 'empty');
         $this->assertFalse($loaded);
@@ -41,7 +43,7 @@ class ConfigCacheFileTest extends TestCase
 
     public function test_Save(): void
     {
-        $path = $this->path . DIRECTORY_SEPARATOR . 'test';
+        $path = $this->temp . DIRECTORY_SEPARATOR . 'test';
         $conf = new \OpxCore\Config\ConfigCacheFile($path);
         $config = ['test' => 'ok'];
         $saved = $conf->save($config);
@@ -55,7 +57,7 @@ class ConfigCacheFileTest extends TestCase
 
     public function test_Save_Profile(): void
     {
-        $path = $this->path . DIRECTORY_SEPARATOR . 'test';
+        $path = $this->temp . DIRECTORY_SEPARATOR . 'test';
         $conf = new \OpxCore\Config\ConfigCacheFile($path);
         $config = ['test' => 'ok'];
         $saved = $conf->save($config, 'profile');
@@ -69,7 +71,7 @@ class ConfigCacheFileTest extends TestCase
 
     public function test_Save_No_Folder(): void
     {
-        $path = $this->path . DIRECTORY_SEPARATOR . 'test' . DIRECTORY_SEPARATOR . 'test';
+        $path = $this->temp . DIRECTORY_SEPARATOR . 'test' . DIRECTORY_SEPARATOR . 'test';
         $conf = new \OpxCore\Config\ConfigCacheFile($path);
         $config = ['test' => 'ok'];
         $saved = $conf->save($config);
