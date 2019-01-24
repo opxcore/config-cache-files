@@ -8,10 +8,10 @@ matrix:
     - php: 7.2
       env: ANALYZE=true
     - php: 7.3
-
 install:
   - travis_retry composer self-update
   - travis_retry composer update --no-interaction --dev
+  - chmod -R 0777 tests/cache
 
 before_script:
   - if [[ $ANALYZE == 'true' ]]; then travis_retry composer require php-coveralls/php-coveralls:^1.0 ; fi;
