@@ -15,7 +15,7 @@ install:
 
 before_script:
   - if [[ $ANALYZE == 'true' ]]; then travis_retry composer require php-coveralls/php-coveralls:^1.0 ; fi;
-
+  - chmod +rw tests/cache
 script:
   - if [[ $ANALYZE == 'true' ]]; then vendor/bin/phpunit --coverage-clover build/logs/clover.xml ; fi;
   - if [[ $ANALYZE != 'true' ]]; then vendor/bin/phpunit ; fi;
