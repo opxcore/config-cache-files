@@ -42,7 +42,7 @@ class ConfigCacheFile implements ConfigCacheRepositoryInterface
      *
      * @param  array $config
      * @param  string|null $profile
-
+     *
      * @return  bool
      */
     public function load(&$config, $profile = null): bool
@@ -59,36 +59,19 @@ class ConfigCacheFile implements ConfigCacheRepositoryInterface
 
         $content = file_get_contents($filename);
 
-        if($content !== false) {
-            $config = unserialize($content, ['allowed_classes' => false]);
+        if ($content !== false) {
+            $restored = unserialize($content, ['allowed_classes' => false]);
+
+            $expiresAt = (isset($restored['expires']) || array_key_exists('expires', $restored)) ? $restored['expires'] : 0;
+
+            if($this->isExpired($expiresAt)) {
+                return false;
+            }
+
+            $config = $restored['config'] ?? [];
         }
 
         return $content !== false;
-    }
-
-    /**
-     * Save config to cache.
-     *
-     * @param  array $config
-     * @param  string|null $profile
-     *
-     * @return  bool
-     */
-    public function save($config, $profile = null): bool
-    {
-        $dirIsSet = $this->path !== null;
-
-        if ($dirIsSet && !is_dir($this->path)) {
-            // fix for mkdir race condition
-            $dirIsSet = !is_dir($this->path) && mkdir($this->path, 0644, true) && is_dir($this->path);
-        }
-
-        if($dirIsSet) {
-            $filename = $this->makeFilename($profile);
-            $saved = file_put_contents($filename, serialize($config)) !== false;
-        }
-
-        return  $dirIsSet && isset($saved);
     }
 
     /**
@@ -103,5 +86,47 @@ class ConfigCacheFile implements ConfigCacheRepositoryInterface
         $filename = trim(trim($this->prefix . '.' . $profile, '.') . '.' . $this->extension, '.');
 
         return $this->path . DIRECTORY_SEPARATOR . $filename;
+    }
+
+    /**
+     * Save config to cache.
+     *
+     * @param  array $config
+     * @param  string|null $profile
+     * @param  integer|null $ttl Time in seconds to cache lives, null for infinity.
+     *
+     * @return  bool
+     */
+    public function save($config, $profile = null, $ttl = null): bool
+    {
+        $dirIsSet = $this->path !== null;
+
+        if ($dirIsSet && !is_dir($this->path)) {
+            // fix for mkdir race condition
+            $dirIsSet = !is_dir($this->path) && mkdir($this->path, 0644, true) && is_dir($this->path);
+        }
+
+        if ($dirIsSet) {
+            $filename = $this->makeFilename($profile);
+            $toSave = [
+                'expires' => $ttl ? time() + $ttl : null,
+                'config' => $config,
+            ];
+            $saved = file_put_contents($filename, serialize($toSave)) !== false;
+        }
+
+        return $dirIsSet && isset($saved);
+    }
+
+    /**
+     * Check timestamp was not expired.
+     *
+     * @param  integer|null $timestamp
+     *
+     * @return  bool
+     */
+    protected function isExpired($timestamp): bool
+    {
+        return ($timestamp !== null) && ($timestamp < time());
     }
 }

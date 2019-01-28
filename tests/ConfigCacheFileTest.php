@@ -50,7 +50,7 @@ class ConfigCacheFileTest extends TestCase
         $this->assertTrue($saved);
         $this->assertFileExists($path . DIRECTORY_SEPARATOR . 'config.cache');
         $this->assertFileIsReadable($path . DIRECTORY_SEPARATOR . 'config.cache');
-        $this->assertStringEqualsFile($path . DIRECTORY_SEPARATOR . 'config.cache', 'a:1:{s:4:"test";s:2:"ok";}');
+        $this->assertStringEqualsFile($path . DIRECTORY_SEPARATOR . 'config.cache', 'a:2:{s:7:"expires";N;s:6:"config";a:1:{s:4:"test";s:2:"ok";}}');
         unlink($path . DIRECTORY_SEPARATOR . 'config.cache');
         rmdir($path);
     }
@@ -64,7 +64,7 @@ class ConfigCacheFileTest extends TestCase
         $this->assertTrue($saved);
         $this->assertFileExists($path . DIRECTORY_SEPARATOR . 'config.profile.cache');
         $this->assertFileIsReadable($path . DIRECTORY_SEPARATOR . 'config.profile.cache');
-        $this->assertStringEqualsFile($path . DIRECTORY_SEPARATOR . 'config.profile.cache', 'a:1:{s:4:"test";s:2:"ok";}');
+        $this->assertStringEqualsFile($path . DIRECTORY_SEPARATOR . 'config.profile.cache', 'a:2:{s:7:"expires";N;s:6:"config";a:1:{s:4:"test";s:2:"ok";}}');
         unlink($path . DIRECTORY_SEPARATOR . 'config.profile.cache');
         rmdir($path);
     }
@@ -99,4 +99,32 @@ class ConfigCacheFileTest extends TestCase
         $this->assertEquals(['test' => 'ok'], $config);
     }
 
+    public function test_Ttl_Ok(): void
+    {
+        $path = $this->temp . DIRECTORY_SEPARATOR . 'test' . DIRECTORY_SEPARATOR . 'test';
+        $conf = new \OpxCore\Config\ConfigCacheFile($path);
+        $config = ['test' => 'ok'];
+        $saved = $conf->save($config, null, 100);
+        $this->assertTrue($saved);
+        $loaded = $conf->load($config);
+        $this->assertTrue($loaded);
+        unlink($path . DIRECTORY_SEPARATOR . 'config.cache');
+        rmdir($path);
+        rmdir($this->temp . DIRECTORY_SEPARATOR . 'test');
+    }
+
+    public function test_Ttl_Not_Ok(): void
+    {
+        $path = $this->temp . DIRECTORY_SEPARATOR . 'test' . DIRECTORY_SEPARATOR . 'test';
+        $conf = new \OpxCore\Config\ConfigCacheFile($path);
+        $config = ['test' => 'ok'];
+        $saved = $conf->save($config, null, 1);
+        $this->assertTrue($saved);
+        sleep(2);
+        $loaded = $conf->load($config);
+        $this->assertFalse($loaded);
+        unlink($path . DIRECTORY_SEPARATOR . 'config.cache');
+        rmdir($path);
+        rmdir($this->temp . DIRECTORY_SEPARATOR . 'test');
+    }
 }
