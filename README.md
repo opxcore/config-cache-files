@@ -15,20 +15,20 @@ composer require opxcore/config-cache-files
 ### Standalone usage:
 
 ```php
-use OpxCore\Config\ConfigCacheFile;
+use OpxCore\Config\ConfigCacheFiles;
 
-$configFiles = new ConfigCacheFile($path);
+$configFiles = new ConfigCacheFiles($path);
 ```
 
 ### Usage with [container](https://github.com/opxcore/container)
 
 ```php
 use OpxCore\Config\Interfaces\ConfigCacheInterface;
-use OpxCore\Config\ConfigCacheFile;
+use OpxCore\Config\ConfigCacheFiles;
 
 $container->bind(
     ConfigCacheInterface::class, 
-    ConfigCacheFile::class, 
+    ConfigCacheFiles::class, 
     ['path' => $path]
 );
 
@@ -36,7 +36,7 @@ $configCache = $container->make(ConfigCacheInterface::class);
 
 // or
 
-$container->bind(ConfigCacheInterface::class, ConfigCacheFile::class);
+$container->bind(ConfigCacheInterface::class, ConfigCacheFiles::class);
 
 $configCache = $container->make(ConfigCacheInterface::class, ['path' => $path]);
 ```

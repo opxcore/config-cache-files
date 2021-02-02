@@ -4,7 +4,7 @@ namespace OpxCore\Config;
 
 use OpxCore\Config\Interfaces\ConfigCacheInterface;
 
-class ConfigCacheFile implements ConfigCacheInterface
+class ConfigCacheFiles implements ConfigCacheInterface
 {
     /**
      * Path to cache file.

@@ -1,6 +1,6 @@
 <?php
 
-use OpxCore\Config\ConfigCacheFile;
+use OpxCore\Config\ConfigCacheFiles;
 use PHPUnit\Framework\TestCase;
 
 class ConfigCacheFileTest extends TestCase
@@ -16,7 +16,7 @@ class ConfigCacheFileTest extends TestCase
 
     public function test_Wrong_Path(): void
     {
-        $conf = new ConfigCacheFile($this->path . 'wrong');
+        $conf = new ConfigCacheFiles($this->path . 'wrong');
 
         $config = [];
         $loaded = $conf->load($config);
@@ -26,7 +26,7 @@ class ConfigCacheFileTest extends TestCase
 
     public function test_Null_Path(): void
     {
-        $conf = new ConfigCacheFile(null);
+        $conf = new ConfigCacheFiles(null);
         $config = [];
         $loaded = $conf->load($config);
         self::assertFalse($loaded);
@@ -35,7 +35,7 @@ class ConfigCacheFileTest extends TestCase
 
     public function test_File_Not_Exists(): void
     {
-        $conf = new ConfigCacheFile(__DIR__);
+        $conf = new ConfigCacheFiles(__DIR__);
         $config = [];
         $loaded = $conf->load($config, 'empty');
         self::assertFalse($loaded);
@@ -45,7 +45,7 @@ class ConfigCacheFileTest extends TestCase
     public function test_Save(): void
     {
         $path = $this->temp;
-        $conf = new ConfigCacheFile($path);
+        $conf = new ConfigCacheFiles($path);
         $config = ['test' => 'ok'];
         $saved = $conf->save($config);
         self::assertTrue($saved);
@@ -58,7 +58,7 @@ class ConfigCacheFileTest extends TestCase
     public function test_Save_Profile(): void
     {
         $path = $this->temp . DIRECTORY_SEPARATOR . 'cache';
-        $conf = new ConfigCacheFile($path);
+        $conf = new ConfigCacheFiles($path);
         $config = ['test' => 'ok'];
         $saved = $conf->save($config, 'profile');
         self::assertTrue($saved);
@@ -72,7 +72,7 @@ class ConfigCacheFileTest extends TestCase
     public function test_Save_No_Folder(): void
     {
         $path = $this->temp;
-        $conf = new ConfigCacheFile($path);
+        $conf = new ConfigCacheFiles($path);
         $config = ['test' => 'ok'];
         $saved = $conf->save($config);
         self::assertTrue($saved);
@@ -81,7 +81,7 @@ class ConfigCacheFileTest extends TestCase
 
     public function test_Load(): void
     {
-        $conf = new ConfigCacheFile($this->path);
+        $conf = new ConfigCacheFiles($this->path);
         $config = [];
         $loaded = $conf->load($config);
         self::assertTrue($loaded);
@@ -90,7 +90,7 @@ class ConfigCacheFileTest extends TestCase
 
     public function test_Load_Profile(): void
     {
-        $conf = new ConfigCacheFile($this->path);
+        $conf = new ConfigCacheFiles($this->path);
         $config = [];
         $loaded = $conf->load($config, 'profile');
         self::assertTrue($loaded);
@@ -100,7 +100,7 @@ class ConfigCacheFileTest extends TestCase
     public function test_Ttl_Ok(): void
     {
         $path = $this->temp;
-        $conf = new ConfigCacheFile($path);
+        $conf = new ConfigCacheFiles($path);
         $config = ['test' => 'ok'];
         $saved = $conf->save($config, null, 100);
         self::assertTrue($saved);
@@ -112,7 +112,7 @@ class ConfigCacheFileTest extends TestCase
     public function test_Ttl_Not_Ok(): void
     {
         $path = $this->temp;
-        $conf = new ConfigCacheFile($path);
+        $conf = new ConfigCacheFiles($path);
         $config = ['test' => 'ok'];
         $saved = $conf->save($config, null, 1);
         self::assertTrue($saved);
