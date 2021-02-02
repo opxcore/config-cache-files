@@ -1,5 +1,5 @@
 {
-  "name": "opxcore/config-cache-file",
+  "name": "opxcore/config-cache-files",
   "description": "The OpxCore config cache file driver.",
   "type": "library",
   "keywords": [
@@ -9,8 +9,8 @@
   ],
   "license": "MIT",
   "support": {
-    "issues": "https://github.com/opxcore/config-cache-file/issues",
-    "source": "https://github.com/opxcore/config-cache-file"
+    "issues": "https://github.com/opxcore/config-cache-files/issues",
+    "source": "https://github.com/opxcore/config-cache-files"
   },
   "authors": [
     {
