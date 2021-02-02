@@ -60,4 +60,4 @@ function return value. In all other cases function returns `false` and `$config`
 $configCache->save($config, $profile, $ttl)
 ```
 
-Saves `$config` array lo file (see loading). `$ttl` is time to live for cached data in seconds.
+Saves `$config` array to file (see loading). `$ttl` is time to live for cached data in seconds.
