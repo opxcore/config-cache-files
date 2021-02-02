@@ -1,4 +1,4 @@
-# config-cache-file
+# config-cache-files
 
 [![Build Status](https://travis-ci.com/opxcore/config-cache-files.svg?branch=main)](https://travis-ci.com/opxcore/config-cache-files)
 [![Coverage Status](https://coveralls.io/repos/github/opxcore/config-cache-files/badge.svg)](https://coveralls.io/github/opxcore/config-cache-files)
