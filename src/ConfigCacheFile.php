@@ -2,37 +2,37 @@
 
 namespace OpxCore\Config;
 
-use OpxCore\Interfaces\ConfigCacheRepositoryInterface;
+use OpxCore\Config\Interfaces\ConfigCacheInterface;
 
-class ConfigCacheFile implements ConfigCacheRepositoryInterface
+class ConfigCacheFile implements ConfigCacheInterface
 {
     /**
      * Path to cache file.
      *
-     * @var  string
+     * @var  string|null
      */
-    protected $path;
+    protected ?string $path;
 
     /**
      * Filename for cache file.
      *
      * @var  string
      */
-    protected $prefix = 'config';
+    protected string $prefix = 'config';
 
     /**
      * Extension for cache file.
      *
      * @var  string
      */
-    protected $extension = 'cache';
+    protected string $extension = 'cache';
 
     /**
      * ConfigCacheFile constructor.
      *
-     * @param  string|null $path
+     * @param string|null $path
      */
-    public function __construct($path = null)
+    public function __construct(?string $path = null)
     {
         $this->path = $path;
     }
@@ -40,12 +40,12 @@ class ConfigCacheFile implements ConfigCacheRepositoryInterface
     /**
      * Load config from cache.
      *
-     * @param  array $config
-     * @param  string|null $profile
+     * @param array $config
+     * @param string|null $profile
      *
      * @return  bool
      */
-    public function load(&$config, $profile = null): bool
+    public function load(array &$config, $profile = null): bool
     {
         if (!$this->path) {
             return false;
@@ -64,7 +64,7 @@ class ConfigCacheFile implements ConfigCacheRepositoryInterface
 
             $expiresAt = (isset($restored['expires']) || array_key_exists('expires', $restored)) ? $restored['expires'] : 0;
 
-            if($this->isExpired($expiresAt)) {
+            if ($this->isExpired($expiresAt)) {
                 return false;
             }
 
@@ -77,11 +77,11 @@ class ConfigCacheFile implements ConfigCacheRepositoryInterface
     /**
      * Make filename for given id.
      *
-     * @param  string $profile
+     * @param string|null $profile
      *
      * @return  string
      */
-    protected function makeFilename($profile): string
+    protected function makeFilename(?string $profile): string
     {
         $filename = trim(trim($this->prefix . '.' . $profile, '.') . '.' . $this->extension, '.');
 
@@ -91,19 +91,19 @@ class ConfigCacheFile implements ConfigCacheRepositoryInterface
     /**
      * Save config to cache.
      *
-     * @param  array $config
-     * @param  string|null $profile
-     * @param  integer|null $ttl Time in seconds to cache lives, null for infinity.
+     * @param array $config
+     * @param string|null $profile
+     * @param integer|null $ttl Time in seconds to cache lives, null for infinity.
      *
      * @return  bool
      */
-    public function save($config, $profile = null, $ttl = null): bool
+    public function save(array $config, $profile = null, $ttl = null): bool
     {
         $dirIsSet = $this->path !== null;
 
         if ($dirIsSet && !is_dir($this->path)) {
             // fix for mkdir race condition
-            $dirIsSet = !is_dir($this->path) && mkdir($this->path, 0644, true) && is_dir($this->path);
+            $dirIsSet = !is_dir($this->path) && mkdir($this->path, 0755, true) && is_dir($this->path);
         }
 
         if ($dirIsSet) {
@@ -121,11 +121,11 @@ class ConfigCacheFile implements ConfigCacheRepositoryInterface
     /**
      * Check timestamp was not expired.
      *
-     * @param  integer|null $timestamp
+     * @param integer|null $timestamp
      *
      * @return  bool
      */
-    protected function isExpired($timestamp): bool
+    protected function isExpired(?int $timestamp): bool
     {
         return ($timestamp !== null) && ($timestamp < time());
     }
