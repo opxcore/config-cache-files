@@ -10,6 +10,9 @@
 
 namespace OpxCore\Config;
 
+use Error;
+use Exception;
+use OpxCore\Config\Exceptions\ConfigCacheException;
 use OpxCore\Config\Interfaces\ConfigCacheInterface;
 
 class ConfigCacheFiles implements ConfigCacheInterface
@@ -52,6 +55,8 @@ class ConfigCacheFiles implements ConfigCacheInterface
      * @param string|null $profile
      *
      * @return  bool
+     *
+     * @throws  ConfigCacheException
      */
     public function load(array &$config, $profile = null): bool
     {
@@ -65,21 +70,33 @@ class ConfigCacheFiles implements ConfigCacheInterface
             return false;
         }
 
-        $content = file_get_contents($filename);
+        try {
+            $content = file_get_contents($filename);
 
-        if ($content !== false) {
-            $restored = unserialize($content, ['allowed_classes' => false]);
-
-            $expiresAt = (isset($restored['expires']) || array_key_exists('expires', $restored)) ? $restored['expires'] : 0;
-
-            if ($this->isExpired($expiresAt)) {
-                return false;
-            }
-
-            $config = $restored['config'] ?? [];
+        } catch (Error | Exception $e) {
+            throw new ConfigCacheException("Can not read configuration cache file {$filename}. {$e->getMessage()}");
         }
 
-        return $content !== false;
+        try {
+            $restored = unserialize($content, ['allowed_classes' => false]);
+
+        } catch (Error | Exception $e) {
+            throw new ConfigCacheException("Can not restore cache from {$filename}: {$e->getMessage()}");
+        }
+
+        $expiresAt = (array_key_exists('expires', $restored)) ? $restored['expires'] : 0;
+
+        if ($expiresAt !== null && !is_int($expiresAt)) {
+            throw new ConfigCacheException("Wrong cache life time in {$filename}. Expected null or int value");
+        }
+
+        if ($this->isExpired($expiresAt)) {
+            return false;
+        }
+
+        $config = $restored['config'] ?? [];
+
+        return true;
     }
 
     /**
@@ -104,14 +121,21 @@ class ConfigCacheFiles implements ConfigCacheInterface
      * @param integer|null $ttl Time in seconds to cache lives, null for infinity.
      *
      * @return  bool
+     *
+     * @throws  ConfigCacheException
      */
     public function save(array $config, $profile = null, $ttl = null): bool
     {
         $dirIsSet = $this->path !== null;
 
         if ($dirIsSet && !is_dir($this->path)) {
-            // fix for mkdir race condition
-            $dirIsSet = !is_dir($this->path) && mkdir($this->path, 0755, true) && is_dir($this->path);
+            try {
+                // fix for mkdir race condition
+                $dirIsSet = !is_dir($this->path) && mkdir($this->path, 0755, true) && is_dir($this->path);
+            } catch (Error | Exception $e) {
+
+                throw new ConfigCacheException("Can not create cache directory {$this->path}. {$e->getMessage()}");
+            }
         }
 
         if ($dirIsSet) {
@@ -120,7 +144,14 @@ class ConfigCacheFiles implements ConfigCacheInterface
                 'expires' => $ttl ? time() + $ttl : null,
                 'config' => $config,
             ];
-            $saved = file_put_contents($filename, serialize($toSave)) !== false;
+
+
+            try {
+                $saved = file_put_contents($filename, serialize($toSave)) !== false;
+
+            } catch (Error | Exception $e) {
+                throw new ConfigCacheException("Can not save configuration cache file {$filename}. {$e->getMessage()}");
+            }
         }
 
         return $dirIsSet && isset($saved);
