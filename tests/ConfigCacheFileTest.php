@@ -9,6 +9,7 @@
  */
 
 use OpxCore\Config\ConfigCacheFiles;
+use OpxCore\Config\Exceptions\ConfigCacheException;
 use PHPUnit\Framework\TestCase;
 
 class ConfigCacheFileTest extends TestCase
@@ -24,28 +25,28 @@ class ConfigCacheFileTest extends TestCase
 
     public function test_Wrong_Path(): void
     {
-        $conf = new ConfigCacheFiles($this->path . 'wrong');
+        $cache = new ConfigCacheFiles($this->path . 'wrong');
 
         $config = [];
-        $loaded = $conf->load($config);
+        $loaded = $cache->load($config);
         self::assertFalse($loaded);
         self::assertEquals([], $config);
     }
 
     public function test_Null_Path(): void
     {
-        $conf = new ConfigCacheFiles(null);
+        $cache = new ConfigCacheFiles(null);
         $config = [];
-        $loaded = $conf->load($config);
+        $loaded = $cache->load($config);
         self::assertFalse($loaded);
         self::assertEquals([], $config);
     }
 
     public function test_File_Not_Exists(): void
     {
-        $conf = new ConfigCacheFiles(__DIR__);
+        $cache = new ConfigCacheFiles(__DIR__);
         $config = [];
-        $loaded = $conf->load($config, 'empty');
+        $loaded = $cache->load($config, 'empty');
         self::assertFalse($loaded);
         self::assertEquals([], $config);
     }
@@ -53,9 +54,9 @@ class ConfigCacheFileTest extends TestCase
     public function test_Save(): void
     {
         $path = $this->temp;
-        $conf = new ConfigCacheFiles($path);
+        $cache = new ConfigCacheFiles($path);
         $config = ['test' => 'ok'];
-        $saved = $conf->save($config);
+        $saved = $cache->save($config);
         self::assertTrue($saved);
         self::assertFileExists($path . DIRECTORY_SEPARATOR . 'config.cache');
         self::assertFileIsReadable($path . DIRECTORY_SEPARATOR . 'config.cache');
@@ -66,9 +67,9 @@ class ConfigCacheFileTest extends TestCase
     public function test_Save_Profile(): void
     {
         $path = $this->temp . DIRECTORY_SEPARATOR . 'cache';
-        $conf = new ConfigCacheFiles($path);
+        $cache = new ConfigCacheFiles($path);
         $config = ['test' => 'ok'];
-        $saved = $conf->save($config, 'profile');
+        $saved = $cache->save($config, 'profile');
         self::assertTrue($saved);
         self::assertFileExists($path . DIRECTORY_SEPARATOR . 'config.profile.cache');
         self::assertFileIsReadable($path . DIRECTORY_SEPARATOR . 'config.profile.cache');
@@ -80,27 +81,27 @@ class ConfigCacheFileTest extends TestCase
     public function test_Save_No_Folder(): void
     {
         $path = $this->temp;
-        $conf = new ConfigCacheFiles($path);
+        $cache = new ConfigCacheFiles($path);
         $config = ['test' => 'ok'];
-        $saved = $conf->save($config);
+        $saved = $cache->save($config);
         self::assertTrue($saved);
         unlink($path . DIRECTORY_SEPARATOR . 'config.cache');
     }
 
     public function test_Load(): void
     {
-        $conf = new ConfigCacheFiles($this->path);
+        $cache = new ConfigCacheFiles($this->path);
         $config = [];
-        $loaded = $conf->load($config);
+        $loaded = $cache->load($config);
         self::assertTrue($loaded);
         self::assertEquals(['test' => 'ok'], $config);
     }
 
     public function test_Load_Profile(): void
     {
-        $conf = new ConfigCacheFiles($this->path);
+        $cache = new ConfigCacheFiles($this->path);
         $config = [];
-        $loaded = $conf->load($config, 'profile');
+        $loaded = $cache->load($config, 'profile');
         self::assertTrue($loaded);
         self::assertEquals(['test' => 'ok'], $config);
     }
@@ -108,11 +109,11 @@ class ConfigCacheFileTest extends TestCase
     public function test_Ttl_Ok(): void
     {
         $path = $this->temp;
-        $conf = new ConfigCacheFiles($path);
+        $cache = new ConfigCacheFiles($path);
         $config = ['test' => 'ok'];
-        $saved = $conf->save($config, null, 100);
+        $saved = $cache->save($config, null, 100);
         self::assertTrue($saved);
-        $loaded = $conf->load($config);
+        $loaded = $cache->load($config);
         self::assertTrue($loaded);
         unlink($path . DIRECTORY_SEPARATOR . 'config.cache');
     }
@@ -120,13 +121,95 @@ class ConfigCacheFileTest extends TestCase
     public function test_Ttl_Not_Ok(): void
     {
         $path = $this->temp;
-        $conf = new ConfigCacheFiles($path);
+        $cache = new ConfigCacheFiles($path);
         $config = ['test' => 'ok'];
-        $saved = $conf->save($config, null, 1);
+        $saved = $cache->save($config, null, 1);
         self::assertTrue($saved);
         sleep(2);
-        $loaded = $conf->load($config);
+        $loaded = $cache->load($config);
         self::assertFalse($loaded);
         unlink($path . DIRECTORY_SEPARATOR . 'config.cache');
+    }
+
+    public function testLoadBad(): void
+    {
+        $cache = new ConfigCacheFiles($this->path);
+        $config = [];
+        $this->expectException(ConfigCacheException::class);
+        $cache->load($config, 'bad');
+    }
+
+    public function testLoadBadTtl(): void
+    {
+        $cache = new ConfigCacheFiles($this->path);
+        $config = [];
+        $this->expectException(ConfigCacheException::class);
+        $cache->load($config, 'badttl');
+    }
+
+    public function testLoadError(): void
+    {
+        copy(
+            $this->path . DIRECTORY_SEPARATOR . 'config.cache',
+            $this->temp . DIRECTORY_SEPARATOR . 'config.cache'
+        );
+        chmod($this->temp . DIRECTORY_SEPARATOR . 'config.cache', 0333);
+        $cache = new ConfigCacheFiles($this->temp);
+        $config = [];
+        $exceptionClass = null;
+        try {
+            $cache->load($config);
+        } catch (Error | Exception $e) {
+            $exceptionClass = get_class($e);
+        }
+        self::assertEquals(ConfigCacheException::class, $exceptionClass);
+        unlink($this->temp . DIRECTORY_SEPARATOR . 'config.cache');
+    }
+
+    public function testSaveDirError(): void
+    {
+        if (!is_dir($this->temp . DIRECTORY_SEPARATOR . 'cache_test')) {
+            mkdir($this->temp . DIRECTORY_SEPARATOR . 'cache_test');
+        }
+        chmod($this->temp . DIRECTORY_SEPARATOR . 'cache_test', 0444);
+
+        $cache = new ConfigCacheFiles($this->temp . DIRECTORY_SEPARATOR . 'cache_test' . DIRECTORY_SEPARATOR . 'test');
+        $config = [];
+        $cache->load($config);
+
+        $exceptionClass = null;
+        try {
+            $cache->save($config);
+        } catch (Error | Exception $e) {
+            $exceptionClass = get_class($e);
+        }
+        self::assertEquals(ConfigCacheException::class, $exceptionClass);
+        rmdir($this->temp . DIRECTORY_SEPARATOR . 'cache_test');
+    }
+
+    public function testSaveError(): void
+    {
+        $tempCache = $this->temp . DIRECTORY_SEPARATOR . 'config.cache';
+
+        if (file_exists($tempCache)) {
+            unlink($tempCache);
+        }
+        copy($this->path . DIRECTORY_SEPARATOR . 'config.cache', $tempCache);
+        chmod($this->temp . DIRECTORY_SEPARATOR . 'config.cache', 0444);
+
+        $cache = new ConfigCacheFiles($this->temp);
+        $config = [];
+
+        $cache->load($config);
+
+        $exceptionClass = null;
+        try {
+            $cache->save($config);
+        } catch (Error | Exception $e) {
+            $exceptionClass = get_class($e);
+        }
+        self::assertEquals(ConfigCacheException::class, $exceptionClass);
+        chmod($tempCache, 0777);
+        unlink($tempCache);
     }
 }
