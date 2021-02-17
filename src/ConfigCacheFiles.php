@@ -74,14 +74,14 @@ class ConfigCacheFiles implements ConfigCacheInterface
             $content = file_get_contents($filename);
 
         } catch (Error | Exception $e) {
-            throw new ConfigCacheException("Can not read configuration cache file {$filename}. {$e->getMessage()}");
+            throw new ConfigCacheException("Can not read configuration cache file {$filename}. {$e->getMessage()}", 0, $e);
         }
 
         try {
             $restored = unserialize($content, ['allowed_classes' => false]);
 
         } catch (Error | Exception $e) {
-            throw new ConfigCacheException("Can not restore cache from {$filename}: {$e->getMessage()}");
+            throw new ConfigCacheException("Can not restore cache from {$filename}: {$e->getMessage()}", 0, $e);
         }
 
         $expiresAt = (array_key_exists('expires', $restored)) ? $restored['expires'] : 0;
@@ -134,7 +134,7 @@ class ConfigCacheFiles implements ConfigCacheInterface
                 $dirIsSet = !is_dir($this->path) && mkdir($this->path, 0755, true) && is_dir($this->path);
             } catch (Error | Exception $e) {
 
-                throw new ConfigCacheException("Can not create cache directory {$this->path}. {$e->getMessage()}");
+                throw new ConfigCacheException("Can not create cache directory {$this->path}. {$e->getMessage()}", 0, $e);
             }
         }
 
@@ -150,7 +150,7 @@ class ConfigCacheFiles implements ConfigCacheInterface
                 $saved = file_put_contents($filename, serialize($toSave)) !== false;
 
             } catch (Error | Exception $e) {
-                throw new ConfigCacheException("Can not save configuration cache file {$filename}. {$e->getMessage()}");
+                throw new ConfigCacheException("Can not save configuration cache file {$filename}. {$e->getMessage()}", 0, $e);
             }
         }
 
